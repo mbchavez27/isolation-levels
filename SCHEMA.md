@@ -1,8 +1,8 @@
 # Sakila Schema
 
-PostgreSQL 15 Sakila database as loaded by `init-sakila.sh`: 15 base tables, their columns and keys, and the first 5 rows of each (ordered by primary key).
+MySQL 8.4 Sakila database as loaded by `init-sakila.sh`: 16 base tables, their columns and keys, and the first 5 rows of each (ordered by primary key).
 
-Views and the monthly `payment_p2007_*` child tables (same columns as `payment`) are not shown.
+Views are not shown.
 
 ## Entity relationship diagram
 
@@ -47,26 +47,24 @@ erDiagram
     varchar last_name
     varchar email
     int address_id FK
-    boolean activebool
-    date create_date
+    tinyint active
+    datetime create_date
     timestamp last_update
-    int active
   }
   film {
     int film_id PK
     varchar title
     text description
-    int release_year
+    year release_year
     int language_id FK
     int original_language_id FK
-    smallint rental_duration
-    numeric rental_rate
+    tinyint rental_duration
+    decimal rental_rate
     smallint length
-    numeric replacement_cost
-    mpaa_rating rating
+    decimal replacement_cost
+    enum rating
+    set special_features
     timestamp last_update
-    text_array special_features
-    tsvector fulltext
   }
   film_actor {
     int actor_id PK, FK
@@ -77,6 +75,11 @@ erDiagram
     int film_id PK, FK
     int category_id PK, FK
     timestamp last_update
+  }
+  film_text {
+    int film_id PK
+    varchar title
+    text description
   }
   inventory {
     int inventory_id PK
@@ -94,15 +97,16 @@ erDiagram
     int customer_id FK
     int staff_id FK
     int rental_id FK
-    numeric amount
-    timestamp payment_date
+    decimal amount
+    datetime payment_date
+    timestamp last_update
   }
   rental {
     int rental_id PK
-    timestamp rental_date
+    datetime rental_date
     int inventory_id FK
     int customer_id FK
-    timestamp return_date
+    datetime return_date
     int staff_id FK
     timestamp last_update
   }
@@ -111,13 +115,13 @@ erDiagram
     varchar first_name
     varchar last_name
     int address_id FK
+    mediumblob picture
     varchar email
     int store_id FK
-    boolean active
+    tinyint active
     varchar username
     varchar password
     timestamp last_update
-    bytea picture
   }
   store {
     int store_id PK
@@ -154,15 +158,16 @@ erDiagram
 | Table | Group | Rows | Columns |
 | --- | --- | ---: | ---: |
 | [`rental`](#rental) | Transactions | 16,044 | 7 |
-| [`payment`](#payment) | Transactions | 16,049 | 6 |
+| [`payment`](#payment) | Transactions | 16,049 | 7 |
 | [`inventory`](#inventory) | Transactions | 4,581 | 4 |
-| [`film`](#film) | Film catalog | 1,000 | 14 |
+| [`film`](#film) | Film catalog | 1,000 | 13 |
+| [`film_text`](#film_text) | Film catalog | 1,000 | 3 |
 | [`film_actor`](#film_actor) | Film catalog | 5,462 | 3 |
 | [`actor`](#actor) | Film catalog | 200 | 4 |
 | [`film_category`](#film_category) | Film catalog | 1,000 | 3 |
 | [`category`](#category) | Film catalog | 16 | 3 |
 | [`language`](#language) | Film catalog | 6 | 3 |
-| [`customer`](#customer) | People & stores | 599 | 10 |
+| [`customer`](#customer) | People & stores | 599 | 9 |
 | [`staff`](#staff) | People & stores | 2 | 11 |
 | [`store`](#store) | People & stores | 2 | 4 |
 | [`address`](#address) | Location | 603 | 8 |
@@ -177,13 +182,13 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `rental_id` | integer | PK | NOT NULL |
-| `rental_date` | timestamp without time zone |  | NOT NULL |
-| `inventory_id` | integer | FK → `inventory` | NOT NULL |
-| `customer_id` | integer | FK → `customer` | NOT NULL |
-| `return_date` | timestamp without time zone |  |  |
-| `staff_id` | integer | FK → `staff` | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `rental_id` | int | PK | NOT NULL |
+| `rental_date` | datetime |  | NOT NULL |
+| `inventory_id` | int unsigned | FK → `inventory` | NOT NULL |
+| `customer_id` | int unsigned | FK → `customer` | NOT NULL |
+| `return_date` | datetime |  |  |
+| `staff_id` | int unsigned | FK → `staff` | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -201,22 +206,23 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `payment_id` | integer | PK | NOT NULL |
-| `customer_id` | integer | FK → `customer` | NOT NULL |
-| `staff_id` | integer | FK → `staff` | NOT NULL |
-| `rental_id` | integer | FK → `rental` | NOT NULL |
-| `amount` | numeric |  | NOT NULL |
-| `payment_date` | timestamp without time zone |  | NOT NULL |
+| `payment_id` | int unsigned | PK | NOT NULL |
+| `customer_id` | int unsigned | FK → `customer` | NOT NULL |
+| `staff_id` | int unsigned | FK → `staff` | NOT NULL |
+| `rental_id` | int | FK → `rental` |  |
+| `amount` | decimal(5,2) |  | NOT NULL |
+| `payment_date` | datetime |  | NOT NULL |
+| `last_update` | timestamp |  |  |
 
 **First 5 rows**
 
-| payment_id | customer_id | staff_id | rental_id | amount | payment_date |
-| --- | --- | --- | --- | --- | --- |
-| 1 | 1 | 1 | 76 | 2.99 | 2005-05-25 11:30:37 |
-| 2 | 1 | 1 | 573 | 0.99 | 2005-05-28 10:35:23 |
-| 3 | 1 | 1 | 1185 | 5.99 | 2005-06-15 00:54:12 |
-| 4 | 1 | 2 | 1422 | 0.99 | 2005-06-15 18:02:53 |
-| 5 | 1 | 2 | 1476 | 9.99 | 2005-06-15 21:08:46 |
+| payment_id | customer_id | staff_id | rental_id | amount | payment_date | last_update |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | 1 | 76 | 2.99 | 2005-05-25 11:30:37 | 2006-02-15 22:12:30 |
+| 2 | 1 | 1 | 573 | 0.99 | 2005-05-28 10:35:23 | 2006-02-15 22:12:30 |
+| 3 | 1 | 1 | 1185 | 5.99 | 2005-06-15 00:54:12 | 2006-02-15 22:12:30 |
+| 4 | 1 | 2 | 1422 | 0.99 | 2005-06-15 18:02:53 | 2006-02-15 22:12:30 |
+| 5 | 1 | 2 | 1476 | 9.99 | 2005-06-15 21:08:46 | 2006-02-15 22:12:30 |
 
 ### inventory
 
@@ -224,10 +230,10 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `inventory_id` | integer | PK | NOT NULL |
-| `film_id` | integer | FK → `film` | NOT NULL |
-| `store_id` | integer | FK → `store` | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `inventory_id` | int unsigned | PK | NOT NULL |
+| `film_id` | int unsigned | FK → `film` | NOT NULL |
+| `store_id` | int unsigned | FK → `store` | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -247,30 +253,49 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `film_id` | integer | PK | NOT NULL |
-| `title` | character varying(255) |  | NOT NULL |
+| `film_id` | int unsigned | PK | NOT NULL |
+| `title` | varchar(255) |  | NOT NULL |
 | `description` | text |  |  |
-| `release_year` | integer |  |  |
-| `language_id` | integer | FK → `language` | NOT NULL |
-| `original_language_id` | integer | FK → `language` |  |
-| `rental_duration` | smallint |  | NOT NULL |
-| `rental_rate` | numeric |  | NOT NULL |
-| `length` | smallint |  |  |
-| `replacement_cost` | numeric |  | NOT NULL |
-| `rating` | mpaa_rating |  |  |
-| `last_update` | timestamp without time zone |  | NOT NULL |
-| `special_features` | ARRAY |  |  |
-| `fulltext` | tsvector |  | NOT NULL |
+| `release_year` | year |  |  |
+| `language_id` | int unsigned | FK → `language` | NOT NULL |
+| `original_language_id` | int unsigned | FK → `language` |  |
+| `rental_duration` | tinyint unsigned |  | NOT NULL |
+| `rental_rate` | decimal(4,2) |  | NOT NULL |
+| `length` | smallint unsigned |  |  |
+| `replacement_cost` | decimal(5,2) |  | NOT NULL |
+| `rating` | enum('G','PG','PG-13','R','NC-17') |  |  |
+| `special_features` | set('Trailers','Commentaries','Deleted Scenes','Behind the Scenes') |  |  |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
-| film_id | title | description | release_year | language_id | original_language_id | rental_duration | rental_rate | length | replacement_cost | rating | last_update | special_features | fulltext |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | ACADEMY DINOSAUR | A Epic Drama of a Feminist And a Mad Scientist who must B… | 2006 | 1 | _null_ | 6 | 0.99 | 86 | 20.99 | PG | 2006-02-15 05:03:42 | Deleted Scenes, Behind the Scenes | 'academi':1 'battl':15 'canadian':20 'dinosaur':2 'drama'… |
-| 2 | ACE GOLDFINGER | A Astounding Epistle of a Database Administrator And a Ex… | 2006 | 1 | _null_ | 3 | 4.99 | 48 | 12.99 | G | 2006-02-15 05:03:42 | Trailers, Deleted Scenes | 'ace':1 'administr':9 'ancient':19 'astound':4 'car':17 '… |
-| 3 | ADAPTATION HOLES | A Astounding Reflection of a Lumberjack And a Car who mus… | 2006 | 1 | _null_ | 7 | 2.99 | 50 | 18.99 | NC-17 | 2006-02-15 05:03:42 | Trailers, Deleted Scenes | 'adapt':1 'astound':4 'baloon':19 'car':11 'factori':20 '… |
-| 4 | AFFAIR PREJUDICE | A Fanciful Documentary of a Frisbee And a Lumberjack who … | 2006 | 1 | _null_ | 5 | 2.99 | 117 | 26.99 | G | 2006-02-15 05:03:42 | Commentaries, Behind the Scenes | 'affair':1 'chase':14 'documentari':5 'fanci':4 'frisbe':… |
-| 5 | AFRICAN EGG | A Fast-Paced Documentary of a Pastry Chef And a Dentist w… | 2006 | 1 | _null_ | 6 | 2.99 | 130 | 22.99 | G | 2006-02-15 05:03:42 | Deleted Scenes | 'african':1 'chef':11 'dentist':14 'documentari':7 'egg':… |
+| film_id | title | description | release_year | language_id | original_language_id | rental_duration | rental_rate | length | replacement_cost | rating | special_features | last_update |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | ACADEMY DINOSAUR | A Epic Drama of a Feminist And a Mad Scientist who must B… | 2006 | 1 | _null_ | 6 | 0.99 | 86 | 20.99 | PG | Deleted Scenes,Behind the Scenes | 2006-02-15 05:03:42 |
+| 2 | ACE GOLDFINGER | A Astounding Epistle of a Database Administrator And a Ex… | 2006 | 1 | _null_ | 3 | 4.99 | 48 | 12.99 | G | Trailers,Deleted Scenes | 2006-02-15 05:03:42 |
+| 3 | ADAPTATION HOLES | A Astounding Reflection of a Lumberjack And a Car who mus… | 2006 | 1 | _null_ | 7 | 2.99 | 50 | 18.99 | NC-17 | Trailers,Deleted Scenes | 2006-02-15 05:03:42 |
+| 4 | AFFAIR PREJUDICE | A Fanciful Documentary of a Frisbee And a Lumberjack who … | 2006 | 1 | _null_ | 5 | 2.99 | 117 | 26.99 | G | Commentaries,Behind the Scenes | 2006-02-15 05:03:42 |
+| 5 | AFRICAN EGG | A Fast-Paced Documentary of a Pastry Chef And a Dentist w… | 2006 | 1 | _null_ | 6 | 2.99 | 130 | 22.99 | G | Deleted Scenes | 2006-02-15 05:03:42 |
+
+### film_text
+
+1,000 rows
+
+| Column | Type | Key | Null |
+| --- | --- | --- | --- |
+| `film_id` | int | PK | NOT NULL |
+| `title` | varchar(255) |  | NOT NULL |
+| `description` | text |  |  |
+
+**First 5 rows**
+
+| film_id | title | description |
+| --- | --- | --- |
+| 1 | ACADEMY DINOSAUR | A Epic Drama of a Feminist And a Mad Scientist who must B… |
+| 2 | ACE GOLDFINGER | A Astounding Epistle of a Database Administrator And a Ex… |
+| 3 | ADAPTATION HOLES | A Astounding Reflection of a Lumberjack And a Car who mus… |
+| 4 | AFFAIR PREJUDICE | A Fanciful Documentary of a Frisbee And a Lumberjack who … |
+| 5 | AFRICAN EGG | A Fast-Paced Documentary of a Pastry Chef And a Dentist w… |
 
 ### film_actor
 
@@ -278,9 +303,9 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `actor_id` | integer | PK, FK → `actor` | NOT NULL |
-| `film_id` | integer | PK, FK → `film` | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `actor_id` | int unsigned | PK, FK → `actor` | NOT NULL |
+| `film_id` | int unsigned | PK, FK → `film` | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -298,10 +323,10 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `actor_id` | integer | PK | NOT NULL |
-| `first_name` | character varying(45) |  | NOT NULL |
-| `last_name` | character varying(45) |  | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `actor_id` | int unsigned | PK | NOT NULL |
+| `first_name` | varchar(45) |  | NOT NULL |
+| `last_name` | varchar(45) |  | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -319,9 +344,9 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `film_id` | integer | PK, FK → `film` | NOT NULL |
-| `category_id` | integer | PK, FK → `category` | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `film_id` | int unsigned | PK, FK → `film` | NOT NULL |
+| `category_id` | int unsigned | PK, FK → `category` | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -339,9 +364,9 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `category_id` | integer | PK | NOT NULL |
-| `name` | character varying(25) |  | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `category_id` | int unsigned | PK | NOT NULL |
+| `name` | varchar(25) |  | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -359,19 +384,19 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `language_id` | integer | PK | NOT NULL |
-| `name` | character(20) |  | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `language_id` | int unsigned | PK | NOT NULL |
+| `name` | char(20) |  | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
 | language_id | name | last_update |
 | --- | --- | --- |
-| 1 | English              | 2006-02-15 05:02:19 |
-| 2 | Italian              | 2006-02-15 05:02:19 |
-| 3 | Japanese             | 2006-02-15 05:02:19 |
-| 4 | Mandarin             | 2006-02-15 05:02:19 |
-| 5 | French               | 2006-02-15 05:02:19 |
+| 1 | English | 2006-02-15 05:02:19 |
+| 2 | Italian | 2006-02-15 05:02:19 |
+| 3 | Japanese | 2006-02-15 05:02:19 |
+| 4 | Mandarin | 2006-02-15 05:02:19 |
+| 5 | French | 2006-02-15 05:02:19 |
 
 ## People & stores
 
@@ -381,26 +406,25 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `customer_id` | integer | PK | NOT NULL |
-| `store_id` | integer | FK → `store` | NOT NULL |
-| `first_name` | character varying(45) |  | NOT NULL |
-| `last_name` | character varying(45) |  | NOT NULL |
-| `email` | character varying(50) |  |  |
-| `address_id` | integer | FK → `address` | NOT NULL |
-| `activebool` | boolean |  | NOT NULL |
-| `create_date` | date |  | NOT NULL |
-| `last_update` | timestamp without time zone |  |  |
-| `active` | integer |  |  |
+| `customer_id` | int unsigned | PK | NOT NULL |
+| `store_id` | int unsigned | FK → `store` | NOT NULL |
+| `first_name` | varchar(45) |  | NOT NULL |
+| `last_name` | varchar(45) |  | NOT NULL |
+| `email` | varchar(50) |  |  |
+| `address_id` | int unsigned | FK → `address` | NOT NULL |
+| `active` | tinyint(1) |  | NOT NULL |
+| `create_date` | datetime |  | NOT NULL |
+| `last_update` | timestamp |  |  |
 
 **First 5 rows**
 
-| customer_id | store_id | first_name | last_name | email | address_id | activebool | create_date | last_update | active |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 1 | MARY | SMITH | MARY.SMITH@sakilacustomer.org | 5 | True | 2006-02-14 | 2006-02-15 04:57:20 | 1 |
-| 2 | 1 | PATRICIA | JOHNSON | PATRICIA.JOHNSON@sakilacustomer.org | 6 | True | 2006-02-14 | 2006-02-15 04:57:20 | 1 |
-| 3 | 1 | LINDA | WILLIAMS | LINDA.WILLIAMS@sakilacustomer.org | 7 | True | 2006-02-14 | 2006-02-15 04:57:20 | 1 |
-| 4 | 2 | BARBARA | JONES | BARBARA.JONES@sakilacustomer.org | 8 | True | 2006-02-14 | 2006-02-15 04:57:20 | 1 |
-| 5 | 1 | ELIZABETH | BROWN | ELIZABETH.BROWN@sakilacustomer.org | 9 | True | 2006-02-14 | 2006-02-15 04:57:20 | 1 |
+| customer_id | store_id | first_name | last_name | email | address_id | active | create_date | last_update |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1 | MARY | SMITH | MARY.SMITH@sakilacustomer.org | 5 | 1 | 2006-02-14 22:04:36 | 2006-02-15 04:57:20 |
+| 2 | 1 | PATRICIA | JOHNSON | PATRICIA.JOHNSON@sakilacustomer.org | 6 | 1 | 2006-02-14 22:04:36 | 2006-02-15 04:57:20 |
+| 3 | 1 | LINDA | WILLIAMS | LINDA.WILLIAMS@sakilacustomer.org | 7 | 1 | 2006-02-14 22:04:36 | 2006-02-15 04:57:20 |
+| 4 | 2 | BARBARA | JONES | BARBARA.JONES@sakilacustomer.org | 8 | 1 | 2006-02-14 22:04:36 | 2006-02-15 04:57:20 |
+| 5 | 1 | ELIZABETH | BROWN | ELIZABETH.BROWN@sakilacustomer.org | 9 | 1 | 2006-02-14 22:04:36 | 2006-02-15 04:57:20 |
 
 ### staff
 
@@ -408,24 +432,24 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `staff_id` | integer | PK | NOT NULL |
-| `first_name` | character varying(45) |  | NOT NULL |
-| `last_name` | character varying(45) |  | NOT NULL |
-| `address_id` | integer | FK → `address` | NOT NULL |
-| `email` | character varying(50) |  |  |
-| `store_id` | integer | FK → `store` | NOT NULL |
-| `active` | boolean |  | NOT NULL |
-| `username` | character varying(16) |  | NOT NULL |
-| `password` | character varying(40) |  |  |
-| `last_update` | timestamp without time zone |  | NOT NULL |
-| `picture` | bytea |  |  |
+| `staff_id` | int unsigned | PK | NOT NULL |
+| `first_name` | varchar(45) |  | NOT NULL |
+| `last_name` | varchar(45) |  | NOT NULL |
+| `address_id` | int unsigned | FK → `address` | NOT NULL |
+| `picture` | mediumblob |  |  |
+| `email` | varchar(50) |  |  |
+| `store_id` | int unsigned | FK → `store` | NOT NULL |
+| `active` | tinyint(1) |  | NOT NULL |
+| `username` | varchar(16) |  | NOT NULL |
+| `password` | varchar(40) |  |  |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
-| staff_id | first_name | last_name | address_id | email | store_id | active | username | password | last_update | picture |
+| staff_id | first_name | last_name | address_id | picture | email | store_id | active | username | password | last_update |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Mike | Hillyer | 3 | Mike.Hillyer@sakilastaff.com | 1 | True | Mike | 8cb2237d0679ca88db6464eac60da96345513964 | 2006-02-15 04:57:16 | _null_ |
-| 2 | Jon | Stephens | 4 | Jon.Stephens@sakilastaff.com | 2 | True | Jon | 8cb2237d0679ca88db6464eac60da96345513964 | 2006-02-15 04:57:16 | _null_ |
+| 1 | Mike | Hillyer | 3 | _null_ | Mike.Hillyer@sakilastaff.com | 1 | 1 | Mike | 8cb2237d0679ca88db6464eac60da96345513964 | 2006-02-15 04:57:16 |
+| 2 | Jon | Stephens | 4 | _null_ | Jon.Stephens@sakilastaff.com | 2 | 1 | Jon | 8cb2237d0679ca88db6464eac60da96345513964 | 2006-02-15 04:57:16 |
 
 ### store
 
@@ -433,10 +457,10 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `store_id` | integer | PK | NOT NULL |
-| `manager_staff_id` | integer | FK → `staff` | NOT NULL |
-| `address_id` | integer | FK → `address` | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `store_id` | int unsigned | PK | NOT NULL |
+| `manager_staff_id` | int unsigned | FK → `staff` | NOT NULL |
+| `address_id` | int unsigned | FK → `address` | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -453,14 +477,14 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `address_id` | integer | PK | NOT NULL |
-| `address` | character varying(50) |  | NOT NULL |
-| `address2` | character varying(50) |  |  |
-| `district` | character varying(20) |  | NOT NULL |
-| `city_id` | integer | FK → `city` | NOT NULL |
-| `postal_code` | character varying(10) |  |  |
-| `phone` | character varying(20) |  | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `address_id` | int unsigned | PK | NOT NULL |
+| `address` | varchar(50) |  | NOT NULL |
+| `address2` | varchar(50) |  |  |
+| `district` | varchar(20) |  | NOT NULL |
+| `city_id` | int unsigned | FK → `city` | NOT NULL |
+| `postal_code` | varchar(10) |  |  |
+| `phone` | varchar(20) |  | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -478,10 +502,10 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `city_id` | integer | PK | NOT NULL |
-| `city` | character varying(50) |  | NOT NULL |
-| `country_id` | integer | FK → `country` | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `city_id` | int unsigned | PK | NOT NULL |
+| `city` | varchar(50) |  | NOT NULL |
+| `country_id` | int unsigned | FK → `country` | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 
@@ -499,9 +523,9 @@ erDiagram
 
 | Column | Type | Key | Null |
 | --- | --- | --- | --- |
-| `country_id` | integer | PK | NOT NULL |
-| `country` | character varying(50) |  | NOT NULL |
-| `last_update` | timestamp without time zone |  | NOT NULL |
+| `country_id` | int unsigned | PK | NOT NULL |
+| `country` | varchar(50) |  | NOT NULL |
+| `last_update` | timestamp |  | NOT NULL |
 
 **First 5 rows**
 

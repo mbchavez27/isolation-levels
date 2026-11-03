@@ -2,7 +2,7 @@
 
 Hands-On 3 for STADVDB: Isolation Levels
 
-PostgreSQL 15 with the Sakila sample database, running in Docker.
+MySQL 8.4 with the Sakila sample database, running in Docker.
 
 ## Requirements
 
@@ -23,19 +23,19 @@ PostgreSQL 15 with the Sakila sample database, running in Docker.
    docker compose up -d
    ```
 
-   The first start downloads and loads Sakila, which takes about a minute. It's ready when `docker compose logs postgres` shows `Sakila Init] Complete!`.
+   The first start downloads and loads Sakila, which takes about 30 seconds. It's ready when `docker compose logs mysql` shows `Sakila Init] Complete!`.
 
 ## Usage
 
-Open psql inside the container:
+Open the MySQL client inside the container (enter `MYSQL_PASSWORD` from your `.env` when prompted):
 
 ```sh
-docker exec -it sakila-postgres-group psql -U postgres -d sakila
+docker exec -it sakila-mysql-group mysql -u sakila -p sakila
 ```
 
 Use the user and database names from your `.env` if you changed them.
 
-To connect from a GUI client (DBeaver, pgAdmin, etc.), use `localhost:5432` and the credentials in `.env`.
+To connect from a GUI client (DBeaver, MySQL Workbench, etc.), use `localhost:3306` and the credentials in `.env`.
 
 | Task | Command |
 | --- | --- |

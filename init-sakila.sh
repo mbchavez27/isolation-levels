@@ -2,17 +2,20 @@
 set -e
 
 echo "=== [Sakila Init] Downloading Sakila Schema and Base Data ==="
-wget -q "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-schema.sql" -O /tmp/schema.sql
-wget -q "https://raw.githubusercontent.com/jOOQ/sakila/main/postgres-sakila-db/postgres-sakila-insert-data.sql" -O /tmp/data.sql
+curl -fsSL "https://raw.githubusercontent.com/jOOQ/sakila/main/mysql-sakila-db/mysql-sakila-schema.sql" -o /tmp/schema.sql
+curl -fsSL "https://raw.githubusercontent.com/jOOQ/sakila/main/mysql-sakila-db/mysql-sakila-insert-data.sql" -o /tmp/data.sql
 
-# The upstream dump hardcodes the "postgres" role as owner; use our configured user instead.
-sed -i -e "s/ TO postgres;/ TO \"$POSTGRES_USER\";/g" -e "s/ FROM postgres;/ FROM \"$POSTGRES_USER\";/g" /tmp/schema.sql /tmp/data.sql
+# The upstream scripts hardcode the "sakila" schema name; use our configured database instead.
+sed -i "s/\([ (]\)sakila\([.;]\)/\1$MYSQL_DATABASE\2/g" /tmp/schema.sql /tmp/data.sql
 
-echo "=== [Sakila Init] Loading Schema into PostgreSQL ==="
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -f /tmp/schema.sql
+export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"
+
+echo "=== [Sakila Init] Loading Schema into MySQL ==="
+mysql --user=root < /tmp/schema.sql
 
 echo "=== [Sakila Init] Loading Base Sakila Data ==="
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" -f /tmp/data.sql
+mysql --user=root < /tmp/data.sql
 
+unset MYSQL_PWD
 rm -f /tmp/schema.sql /tmp/data.sql
 echo "=== [Sakila Init] Complete! Base Sakila database ready. ==="
