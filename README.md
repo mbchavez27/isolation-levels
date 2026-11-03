@@ -41,3 +41,9 @@ To connect from a GUI client (DBeaver, MySQL Workbench, etc.), use `localhost:33
 | --- | --- |
 | Stop | `docker compose down` |
 | Reset (delete data and reload Sakila) | `docker compose down -v` |
+
+## Docs
+
+- [Sakila schema](docs/database/schema.md)
+- [`film_rental` table](docs/database/film-rental.md)
+- [Dirty read test](docs/tests/dirty-read.md): run with `./tests/dirty-read/run.sh`

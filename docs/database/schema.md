@@ -1,8 +1,8 @@
 # Sakila Schema
 
-MySQL 8.4 Sakila database as loaded by `init-sakila.sh`: 16 base tables, their columns and keys, and the first 5 rows of each (ordered by primary key).
+MySQL 8.4 Sakila database as loaded by [`db/init-sakila.sh`](../../db/init-sakila.sh): 16 base tables, their columns and keys, and the first 5 rows of each (ordered by primary key).
 
-Views are not shown. The `film_rental` table used for the transaction exercises is documented in [FILM_RENTAL.md](FILM_RENTAL.md).
+Views are not shown. The `film_rental` table used for the transaction exercises is documented in [film-rental.md](film-rental.md).
 
 ## Entity relationship diagram
 

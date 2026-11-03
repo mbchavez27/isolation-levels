@@ -2,7 +2,7 @@
 
 Simplified transaction table for the isolation-level exercises. It's built from Sakila's `rental`, `inventory` and `film` tables and uses the InnoDB engine, because MyISAM doesn't support transactions.
 
-It's created automatically on the first `docker compose up` (see [`film-rental.sql`](film-rental.sql)).
+It's created automatically on the first `docker compose up` (see [`db/film-rental.sql`](../../db/film-rental.sql)).
 
 ## Definition
 
@@ -50,5 +50,6 @@ WHERE table_schema = DATABASE() AND table_name = 'film_rental';
 To rebuild the table with its original data without resetting the whole database:
 
 ```sh
-docker exec -i sakila-mysql-group mysql -u sakila -p sakila < film-rental.sql
+set -a; . ./.env; set +a
+docker exec -i -e MYSQL_PWD="$MYSQL_PASSWORD" sakila-mysql-group mysql -u sakila sakila < db/film-rental.sql
 ```
