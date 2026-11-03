@@ -13,6 +13,7 @@ FROM film_rental WHERE rental_id = 11496;
 -- Keep the change uncommitted so T2 can try to read it.
 DO SLEEP(10);
 
+SELECT 'T1 rolling back' AS step, SYSDATE(6) AS at_time, '' AS return_date;
 ROLLBACK;
 SELECT 'T1 rolled back' AS step, SYSDATE(6) AS at_time, return_date
 FROM film_rental WHERE rental_id = 11496;

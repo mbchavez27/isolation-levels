@@ -22,7 +22,7 @@ All in [`tests/dirty-read/`](../../tests/dirty-read/):
 | `t2-read-committed.sql` | T2 | Reader at READ COMMITTED |
 | `t2-repeatable-read.sql` | T2 | Reader at REPEATABLE READ |
 | `t2-serializable.sql` | T2 | Reader at SERIALIZABLE |
-| `run.sh` | both | Runs all 4 cases and saves each one's output to `results/` |
+| `run.sh` | both | Runs all 4 cases and saves each one as a timeline in `results/` |
 
 Each step prints a label, a `SYSDATE(6)` timestamp, and the current `return_date`, so the output shows the order the two sessions ran in.
 
@@ -42,10 +42,24 @@ Isolation level    | T2 read 1             | T2 waited | Dirty read?
 READ UNCOMMITTED   | 2006-02-20 10:00:00   |     0.00s | YES
 READ COMMITTED     | NULL                  |     0.00s | no
 REPEATABLE READ    | NULL                  |     0.00s | no
-SERIALIZABLE       | NULL                  |     8.94s | no
+SERIALIZABLE       | NULL                  |     8.96s | no
 ```
 
-The full T1 and T2 output for each case is saved to `tests/dirty-read/results/<level>.txt`.
+Each case is saved as a simple timeline of both sessions in `tests/dirty-read/results/<level>.txt`, ending with the result. For example, `serializable.txt`:
+
+```text
+   time     who  step                               return_date
+   0.00 s   T1   start (REPEATABLE-READ)
+   0.00 s   T1   updated (uncommitted)              2006-02-20 10:00:00
+   1.04 s   T2   start (SERIALIZABLE)
+   1.04 s   T2   read 1 BLOCKED (T1 holds row lock)
+  10.00 s   T1   rolling back
+  10.00 s   T2   read 1 returns (waited 8.96 s)     NULL
+  10.00 s   T1   rolled back                        NULL
+  20.00 s   T2   read 2 (T1 rolled back)            NULL
+
+Result: NO DIRTY READ: T2 only saw the committed value (NULL).
+```
 
 ## Run one case by hand
 
@@ -116,11 +130,11 @@ T2 saw a return that was rolled back and never happened. **Dirty read: yes.**
 | 0 s: `UPDATE ... SET return_date = '2006-02-20 10:00:00'` (uncommitted) | |
 | `DO SLEEP(10)` | 1 s: `START TRANSACTION` |
 | | 1 s: read 1 **blocks**, waiting for T1's row lock |
-| 10 s: `ROLLBACK` (releases the lock) | 10 s: read 1 returns `NULL` after waiting 8.94 s |
+| 10 s: `ROLLBACK` (releases the lock) | 10 s: read 1 returns `NULL` after waiting 8.96 s |
 | | `DO SLEEP(10)` |
 | | 20 s: read 2 returns `NULL` |
 
-**Dirty read: no.** The price is the 8.94-second wait.
+**Dirty read: no.** The price is the 8.96-second wait.
 
 ### Summary
 
@@ -129,7 +143,7 @@ T2 saw a return that was rolled back and never happened. **Dirty read: yes.**
 | READ UNCOMMITTED | `2006-02-20 10:00:00` | 0.00 s | **Yes** |
 | READ COMMITTED | `NULL` | 0.00 s | No |
 | REPEATABLE READ | `NULL` | 0.00 s | No |
-| SERIALIZABLE | `NULL` | 8.94 s | No |
+| SERIALIZABLE | `NULL` | 8.96 s | No |
 
 ### Why
 
