@@ -12,6 +12,8 @@ services:
     volumes:
       # Mount initialization script into container's auto-exec folder
       - ./init-sakila.sh:/docker-entrypoint-initdb.d/init-sakila.sh
+      # Simplified InnoDB table for the transaction exercises, created after Sakila loads
+      - ./film-rental.sql:/sakila/film-rental.sql
       # Named volume for database persistence
       - mysqldata:/var/lib/mysql
     healthcheck:

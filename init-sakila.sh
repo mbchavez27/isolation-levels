@@ -16,6 +16,9 @@ mysql --user=root < /tmp/schema.sql
 echo "=== [Sakila Init] Loading Base Sakila Data ==="
 mysql --user=root < /tmp/data.sql
 
+echo "=== [Sakila Init] Creating film_rental Table ==="
+mysql --user=root "$MYSQL_DATABASE" < /sakila/film-rental.sql
+
 unset MYSQL_PWD
 rm -f /tmp/schema.sql /tmp/data.sql
 echo "=== [Sakila Init] Complete! Base Sakila database ready. ==="
