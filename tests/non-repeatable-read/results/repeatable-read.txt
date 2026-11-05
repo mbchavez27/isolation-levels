@@ -1,0 +1,13 @@
+Non-repeatable read test: REPEATABLE READ
+Rental 11496. T1 reads twice. T2 updates return_date to '2006-02-25 15:30:00' and commits in between.
+Scripts: t1-repeatable-read.sql + t2-writer.sql
+
+   time     who  step                                 return_date
+   0.00 s   T1   start (REPEATABLE-READ)              
+   0.00 s   T1   read 1                               NULL
+   1.50 s   T2   start (REPEATABLE-READ)              
+   1.51 s   T2   updated & committed                  2006-02-25 15:30:00
+   6.00 s   T1   read 2                               NULL
+
+Result: REPEATABLE READ: T1 saw 'NULL' on both reads despite T2 committing an update.
+

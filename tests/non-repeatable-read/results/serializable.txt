@@ -1,0 +1,15 @@
+Non-repeatable read test: SERIALIZABLE
+Rental 11496. T1 reads twice. T2 updates return_date to '2006-02-25 15:30:00' and commits in between.
+Scripts: t1-serializable.sql + t2-writer.sql
+
+   time     who  step                                 return_date
+   0.00 s   T1   start (SERIALIZABLE)                 
+   0.00 s   T1   read 1                               NULL
+   1.50 s   T2   start (REPEATABLE-READ)              
+   1.50 s   T2   update BLOCKED (T1 holds shared lock)
+   6.00 s   T1   read 2                               NULL
+   6.00 s   T1   committed (shared lock released)     
+   6.00 s   T2   update commits (waited 4.50 s)       2006-02-25 15:30:00
+
+Result: REPEATABLE READ: T1 saw 'NULL' on both reads despite T2 attempting an update. T2 was blocked for 4.50 s.
+

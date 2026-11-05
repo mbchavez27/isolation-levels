@@ -1,4 +1,4 @@
-# isolation-levels
+   # isolation-levels
 
 Hands-On 3 for STADVDB: Isolation Levels
 
@@ -47,3 +47,4 @@ To connect from a GUI client (DBeaver, MySQL Workbench, etc.), use `localhost:33
 - [Sakila schema](docs/database/schema.md)
 - [`film_rental` table](docs/database/film-rental.md)
 - [Dirty read test](docs/tests/dirty-read.md): run with `./tests/dirty-read/run.sh`
+- [Non-repeatable read test](docs/tests/non-repeatable-read.md): run with `./tests/non-repeatable-read/run.sh`
