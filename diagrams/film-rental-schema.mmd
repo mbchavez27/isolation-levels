@@ -1,0 +1,31 @@
+%% How film_rental is derived from Sakila.
+%% Solid lines: Sakila foreign keys. Dashed lines: columns copied into film_rental.
+erDiagram
+  direction LR
+  film ||--o{ inventory : "film_id"
+  inventory ||--o{ rental : "inventory_id"
+  rental ||..|| film_rental : "rental_id, customer_id, rental_date, return_date"
+  film ||..o{ film_rental : "title"
+
+  film {
+    int film_id PK
+    varchar title
+  }
+  inventory {
+    int inventory_id PK
+    int film_id FK
+  }
+  rental {
+    int rental_id PK
+    datetime rental_date
+    int inventory_id FK
+    int customer_id FK
+    datetime return_date
+  }
+  film_rental {
+    int rental_id PK
+    varchar title
+    smallint customer_id
+    datetime rental_date
+    datetime return_date
+  }
