@@ -1,0 +1,38 @@
+Lock experiment: l3-repeatable-read (REPEATABLE READ)
+Phantom blocked by next-key (gap) locks
+Scripts: l3-t1-range.sql + l3-t2-insert.sql
+
+   time     who  step                                               value
+   0.00 s   T1   start (REPEATABLE-READ)                            
+   0.00 s   T1   count 1 (FOR UPDATE)                               10
+   1.52 s   T2   start (REPEATABLE-READ)                            
+   1.52 s   T2   insert rental 16050 -> BLOCKED                     
+   6.00 s   T1   count 2 (FOR UPDATE)                               10
+   6.00 s   T1   committed                                          
+   6.00 s   T2   insert rental 16050 done (waited 4.48 s)           inserted
+
+Locks on film_rental at ~3 s (while T2 waits):
++-------------+------------+-----------+--------------------+-------------+------------------------+
+| table_name  | index_name | lock_type | lock_mode          | lock_status | lock_data              |
++-------------+------------+-----------+--------------------+-------------+------------------------+
+| film_rental | NULL       | TABLE     | IX                 | GRANTED     | NULL                   |
+| film_rental | PRIMARY    | RECORD    | X,REC_NOT_GAP      | GRANTED     | 16040                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16041                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16042                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16043                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16044                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16045                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16046                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16047                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16048                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | 16049                  |
+| film_rental | PRIMARY    | RECORD    | X                  | GRANTED     | supremum pseudo-record |
+| film_rental | NULL       | TABLE     | IX                 | GRANTED     | NULL                   |
+| film_rental | PRIMARY    | RECORD    | X,INSERT_INTENTION | WAITING     | supremum pseudo-record |
++-------------+------------+-----------+--------------------+-------------+------------------------+
++-------------+---------------+------------+
+| table_name  | mdl_lock_type | mdl_status |
++-------------+---------------+------------+
+| film_rental | SHARED_WRITE  | GRANTED    |
+| film_rental | SHARED_WRITE  | GRANTED    |
++-------------+---------------+------------+

@@ -1,0 +1,28 @@
+Lock experiment: l2-read-committed (READ COMMITTED)
+Non-repeatable read fixed by FOR UPDATE
+Scripts: l2-t1-reader.sql + l2-t2-writer.sql
+
+   time     who  step                                               value
+   0.00 s   T1   start (READ-COMMITTED)                             
+   0.00 s   T1   read 1 (FOR UPDATE)                                NULL
+   1.54 s   T2   start (REPEATABLE-READ)                            
+   1.54 s   T2   update rental 11496 -> BLOCKED                     
+   6.00 s   T1   read 2                                             NULL
+   6.00 s   T1   committed                                          
+   6.00 s   T2   update rental 11496 done (waited 4.46 s)           2006-02-25 15:30:00
+
+Locks on film_rental at ~3 s (while T2 waits):
++-------------+------------+-----------+---------------+-------------+-----------+
+| table_name  | index_name | lock_type | lock_mode     | lock_status | lock_data |
++-------------+------------+-----------+---------------+-------------+-----------+
+| film_rental | NULL       | TABLE     | IX            | GRANTED     | NULL      |
+| film_rental | PRIMARY    | RECORD    | X,REC_NOT_GAP | GRANTED     | 11496     |
+| film_rental | NULL       | TABLE     | IX            | GRANTED     | NULL      |
+| film_rental | PRIMARY    | RECORD    | X,REC_NOT_GAP | WAITING     | 11496     |
++-------------+------------+-----------+---------------+-------------+-----------+
++-------------+---------------+------------+
+| table_name  | mdl_lock_type | mdl_status |
++-------------+---------------+------------+
+| film_rental | SHARED_WRITE  | GRANTED    |
+| film_rental | SHARED_WRITE  | GRANTED    |
++-------------+---------------+------------+

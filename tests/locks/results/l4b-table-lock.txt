@@ -1,0 +1,21 @@
+Lock experiment: l4b-table-lock (SERIALIZABLE + LOCK TABLES)
+Table lock (blocks every row)
+Scripts: l4-t1-table-lock.sql + l4-t2-writer.sql
+
+   time     who  step                                               value
+   0.00 s   T1   start (SERIALIZABLE)                               
+   0.00 s   T1   read 1 (table locked)                              NULL
+   1.56 s   T2   start (REPEATABLE-READ)                            
+   1.56 s   T2   update rental 1 (other row) -> BLOCKED             
+   6.00 s   T1   read 2                                             NULL
+   6.00 s   T1   unlocked                                           
+   6.00 s   T2   update rental 1 (other row) done (waited 4.44 s)   updated
+   6.00 s   T2   update rental 11496                                updated
+
+Locks on film_rental at ~3 s (while T2 waits):
++-------------+------------------+------------+
+| table_name  | mdl_lock_type    | mdl_status |
++-------------+------------------+------------+
+| film_rental | SHARED_READ_ONLY | GRANTED    |
+| film_rental | SHARED_WRITE     | PENDING    |
++-------------+------------------+------------+

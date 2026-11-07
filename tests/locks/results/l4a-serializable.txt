@@ -1,0 +1,30 @@
+Lock experiment: l4a-serializable (SERIALIZABLE)
+Implicit row S-lock (only row 11496)
+Scripts: l4-t1-serializable.sql + l4-t2-writer.sql
+
+   time     who  step                                               value
+   0.00 s   T1   start (SERIALIZABLE)                               
+   0.00 s   T1   read 1                                             NULL
+   1.52 s   T2   start (REPEATABLE-READ)                            
+   1.52 s   T2   update rental 1 (other row)                        updated
+   1.52 s   T2   update rental 11496 -> BLOCKED                     
+   6.00 s   T1   read 2                                             NULL
+   6.00 s   T1   committed                                          
+   6.00 s   T2   update rental 11496 done (waited 4.48 s)           updated
+
+Locks on film_rental at ~3 s (while T2 waits):
++-------------+------------+-----------+---------------+-------------+-----------+
+| table_name  | index_name | lock_type | lock_mode     | lock_status | lock_data |
++-------------+------------+-----------+---------------+-------------+-----------+
+| film_rental | NULL       | TABLE     | IX            | GRANTED     | NULL      |
+| film_rental | PRIMARY    | RECORD    | X,REC_NOT_GAP | GRANTED     | 1         |
+| film_rental | PRIMARY    | RECORD    | X,REC_NOT_GAP | WAITING     | 11496     |
+| film_rental | NULL       | TABLE     | IS            | GRANTED     | NULL      |
+| film_rental | PRIMARY    | RECORD    | S,REC_NOT_GAP | GRANTED     | 11496     |
++-------------+------------+-----------+---------------+-------------+-----------+
++-------------+---------------+------------+
+| table_name  | mdl_lock_type | mdl_status |
++-------------+---------------+------------+
+| film_rental | SHARED_READ   | GRANTED    |
+| film_rental | SHARED_WRITE  | GRANTED    |
++-------------+---------------+------------+

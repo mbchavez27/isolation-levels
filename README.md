@@ -48,3 +48,4 @@ To connect from a GUI client (DBeaver, MySQL Workbench, etc.), use `localhost:33
 - [`film_rental` table](docs/database/film-rental.md)
 - [Dirty read test](docs/tests/dirty-read.md): run with `./tests/dirty-read/run.sh`
 - [Non-repeatable read test](docs/tests/non-repeatable-read.md): run with `./tests/non-repeatable-read/run.sh`
+- [Lock experiments](docs/tests/locks.md): run with `./tests/locks/run.sh`
