@@ -1,4 +1,4 @@
-   # isolation-levels
+# isolation-levels
 
 Hands-On 3 for STADVDB: Isolation Levels
 
@@ -12,18 +12,18 @@ MySQL 8.4 with the Sakila sample database, running in Docker.
 
 1. Create your `.env` file:
 
-   ```sh
-   cp .env.example .env              # macOS / Linux
-   Copy-Item .env.example .env       # Windows PowerShell
-   ```
+    ```sh
+    cp .env.example .env              # macOS / Linux
+    Copy-Item .env.example .env       # Windows PowerShell
+    ```
 
 2. Start the database:
 
-   ```sh
-   docker compose up -d
-   ```
+    ```sh
+    docker compose up -d
+    ```
 
-   The first start downloads and loads Sakila, which takes about 30 seconds. It's ready when `docker compose logs mysql` shows `Sakila Init] Complete!`.
+    The first start downloads and loads Sakila, which takes about 30 seconds. It's ready when `docker compose logs mysql` shows `Sakila Init] Complete!`.
 
 ## Usage
 
@@ -37,9 +37,9 @@ Use the user and database names from your `.env` if you changed them.
 
 To connect from a GUI client (DBeaver, MySQL Workbench, etc.), use `localhost:3306` and the credentials in `.env`.
 
-| Task | Command |
-| --- | --- |
-| Stop | `docker compose down` |
+| Task                                  | Command                  |
+| ------------------------------------- | ------------------------ |
+| Stop                                  | `docker compose down`    |
 | Reset (delete data and reload Sakila) | `docker compose down -v` |
 
 ## Docs
@@ -48,4 +48,5 @@ To connect from a GUI client (DBeaver, MySQL Workbench, etc.), use `localhost:33
 - [`film_rental` table](docs/database/film-rental.md)
 - [Dirty read test](docs/tests/dirty-read.md): run with `./tests/dirty-read/run.sh`
 - [Non-repeatable read test](docs/tests/non-repeatable-read.md): run with `./tests/non-repeatable-read/run.sh`
+- [Phantom read test](docs/tests/phantom-read.md): run with `./tests/phantom-read/run.sh`
 - [Lock experiments](docs/tests/locks.md): run with `./tests/locks/run.sh`

@@ -1,0 +1,15 @@
+Phantom read test: SERIALIZABLE
+T1 runs COUNT(*) and MAX(rental_date) over customer 75's unreturned rentals twice. T2 inserts rental 16050 (customer 75, not returned, rented 2006-02-25 15:30:00) and commits in between.
+Scripts: t1-serializable.sql + t2-insert.sql
+
+   time     who  step                                         aggregates
+   0.00 s   T1   start (SERIALIZABLE)                         
+   0.00 s   T1   read 1                                       COUNT=3, MAX(rental_date)=2006-02-14 15:16:03
+   1.53 s   T2   start (REPEATABLE-READ)                      
+   1.53 s   T2   insert BLOCKED (T1 holds gap locks)          
+   6.02 s   T1   read 2                                       COUNT=3, MAX(rental_date)=2006-02-14 15:16:03
+   6.02 s   T1   committed                                    
+   6.03 s   T2   inserted after waiting 4.50 s (uncommitted)  rental 16050
+   8.04 s   T2   committed                                    rental 16050
+
+Result: NO PHANTOM: T1 saw 'COUNT=3, MAX(rental_date)=2006-02-14 15:16:03' on both reads although T2 inserted and committed rental 16050. T2's insert was blocked for 4.50 s.

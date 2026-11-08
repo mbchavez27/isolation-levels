@@ -1,0 +1,14 @@
+Phantom read test: READ UNCOMMITTED
+T1 runs COUNT(*) and MAX(rental_date) over customer 75's unreturned rentals twice. T2 inserts rental 16050 (customer 75, not returned, rented 2006-02-25 15:30:00) and commits in between.
+Scripts: t1-read-uncommitted.sql + t2-insert.sql
+
+   time     who  step                                         aggregates
+   0.00 s   T1   start (READ-UNCOMMITTED)                     
+   0.00 s   T1   read 1                                       COUNT=3, MAX(rental_date)=2006-02-14 15:16:03
+   1.57 s   T2   start (REPEATABLE-READ)                      
+   1.57 s   T2   inserted (uncommitted)                       rental 16050
+   3.59 s   T2   committed                                    rental 16050
+   6.02 s   T1   read 2                                       COUNT=4, MAX(rental_date)=2006-02-25 15:30:00
+   6.02 s   T1   committed                                    
+
+Result: PHANTOM READ: the same aggregate query returned 'COUNT=3, MAX(rental_date)=2006-02-14 15:16:03' then 'COUNT=4, MAX(rental_date)=2006-02-25 15:30:00' within one transaction.
